@@ -177,7 +177,7 @@ def checkcron(cron):
     return cronlist
 
 
-@sv.on_rex(r'^time=(.*?)rmd=(.*)')
+@sv.on_rex(r'^--time=(.*?)--rmd=(.*)')
 async def start_reminder(bot, ev):
     global group_data, curent_gid, lckg
     group_id = str(ev['group_id'])

@@ -171,7 +171,7 @@ def checkcron(cron):
     cronlist = cron.split(' ')
     if len(cronlist) != 5:
         if len(cronlist) == 6:
-            return cronlist[-5:]
+            cronlist = cronlist[-5:]
         else:
             return None
     return cronlist
@@ -206,8 +206,20 @@ async def start_reminder(bot, ev):
         if '*' in time[0] or '/' in time[0] or '-' in time[0]:
             await bot.send(ev, '为防刷屏不允许使用分钟级cron表达式，请重新输入~')
             return
+        
+        curent_gid = curent_gid + 1
+        nonebot.scheduler.add_job(
+            send_group_reminder,
+            'cron',
+            args=(group_id, msg),
+            id=f'reminder_group_{str(curent_gid)}',
+            replace_existing=True,
+            day_of_week=time[4],
+            month=time[3],
+            day=time[2],
+            hour=time[1],
+            minute=time[0])
         async with lckg:
-            curent_gid = curent_gid + 1
             group_data[str(curent_gid)] = {
                 'group': str(group_id),
                 'user': str(user_id),
@@ -277,10 +289,10 @@ async def del_reminder(bot, ev):
             await bot.send(ev, '不可删除非本群提醒……')
             return
         async with lckg:
-            nonebot.scheduler.remove_job(f'reminder_group_{rmd_id}')
             group_data.pop(rmd_id)
             group = {'group_data': group_data, 'curent_gid': curent_gid}
             save_data(group, 'gdata.json')
+        nonebot.scheduler.remove_job(f'reminder_group_{rmd_id}')
         await bot.send(ev, f'定时提醒{rmd_id}已移除~')
     except Exception as e:
         print(format_exc())
